@@ -37,12 +37,12 @@ role_checker = RoleChecker(["user"])
 async def send_mail(emails:EmailModel,bg_tasks:BackgroundTasks):
     emails = emails.adresses
 
-    
-    subject="Hi!, welcome to our website",
-    template_body={"verification_url":"google.com"}
-    
+    name = "Nithin"
+    subject="Hi!,welcome to our website"
+    template_body={"name":name}
+    template_name = "index.html"
 
-    send_email.delay(emails,subject,template_body)
+    send_email.delay(emails,subject,template_body,template_name)
                         
 
     return {"message":"message sent successfully"}
@@ -68,15 +68,13 @@ async def create_user_account(
     new_user = await user_service.create_user(user_data,session)
 
     token = create_url_safe_token({"email":email})
+
+    subject = "Verify your account"
     link = f"http://{Config.DOMAIN}/api/v1/user/verify/{token}"
+    template_body = {"verification_url":link}
+    template_name = "verification.html"
 
-    message = create_message(
-            recipients=[email],
-            subject="welcome",
-            template_body={"verification_url":link}
-        )
-
-    await mail.send_message(message,template_name="verification.html")
+    send_email.delay([email],subject,template_body,template_name)
 
     return {
         "message": "Account Created! Check email to verify your account",
@@ -154,16 +152,14 @@ async def password_reset_request(email_data:PasswordResetRequestModel,session:As
 
     token = create_url_safe_token({"email":email})
 
+    subject = "Reset your password"
     link = f"http://{Config.DOMAIN}/api/v1/user/password-reset-confirm/{token}"
     user = await user_service.get_user_by_email(email,session)
-    message = create_message(
-                recipients=[email],
-                subject="Password reset",
-                template_body={"username":user.username,
-                               "reset_url":link}
-            )
-    
-    await mail.send_message(message,template_name="password_reset.html")
+    template_body = {"username":user.username,
+                     "reset_url":link}
+    template_name = "password_reset.html"
+
+    send_email.delay([email],subject,template_body,template_name)
 
     return JSONResponse(
         content={"message": "Please check your email for instructions to reset your password"},

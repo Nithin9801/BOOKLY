@@ -22,7 +22,7 @@ mail = FastMail(config=mail_config)
 
 
 def create_message(recipients: list[str], subject: str,template_body:dict):
-
+    
     message = MessageSchema(
         recipients=recipients, subject=subject,subtype=MessageType.html,template_body=template_body
     )

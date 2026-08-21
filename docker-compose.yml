@@ -1,0 +1,77 @@
+services:
+  web:
+    build: .
+
+    image: nithin0198aw/bookly_db
+
+    environment: 
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      DOMAIN: ${DOMAIN}
+      REDIS_URL: ${REDIS_URL}
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+      - redis
+
+    networks:
+      - app-network
+
+  db:
+    image: mysql:8.0.45
+
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    ports:
+     - "3306:3306"
+
+    volumes:
+      - db-data:/var/lib/mysql
+
+    networks:
+      - app-network
+  redis:
+    image: redis:6
+
+    ports:
+     - "6379:6379"
+
+    networks:
+     - app-network
+
+  celery:
+    build: .
+    
+    image: nithin0198aw/bookly_db 
+
+    command: celery -A src.celery_tasks.c_app worker --loglevel=INFO
+
+    depends_on:
+      - redis
+
+    environment:
+      REDIS_URL: ${REDIS_URL}
+
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge
